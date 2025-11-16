@@ -1,0 +1,1 @@
+if('serviceWorker' in navigator) {window.addEventListener('load', () => {navigator.serviceWorker.register('/StoryMap-pwa5/sw.js', { scope: '/StoryMap-pwa5/' })})}
