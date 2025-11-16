@@ -3,7 +3,7 @@ import { resolve } from 'path';
 import { VitePWA } from 'vite-plugin-pwa';
 
 export default defineConfig({
-  base: "/StoryMap-pwa5/",
+  base: "/StoryMap-pwa6/",
   root: resolve(__dirname, 'src'),
   publicDir: resolve(__dirname, 'public'),
 
