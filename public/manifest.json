@@ -1,6 +1,6 @@
 {
-  "name": "Story App",
-  "short_name": "StoryApp",
+  "name": "Story Map",
+  "short_name": "StoryMap",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

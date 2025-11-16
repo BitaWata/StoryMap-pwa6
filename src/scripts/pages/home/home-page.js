@@ -29,40 +29,39 @@ export default class HomePage {
 
       btn.textContent = isSubscribed ? "Nonaktifkan Notifikasi" : "Aktifkan Notifikasi";
 
-    btn.addEventListener("click", async () => {
+      btn.addEventListener("click", async () => {
+        const subscribedNow = localStorage.getItem("pushSubscribed");
 
-      const subscribedNow = localStorage.getItem("pushSubscribed");
-
-  if (subscribedNow) {
-    console.log("🔕 Menonaktifkan notifikasi...");
-    await PushHelper.unregisterPush(registration);
-    localStorage.removeItem("pushSubscribed");
-    btn.textContent = "Aktifkan Notifikasi";
-  } else {
-    console.log("🔔 Mengaktifkan notifikasi...");
-    await PushHelper.registerPush(registration);
-    localStorage.setItem("pushSubscribed", "true");
-    btn.textContent = "Nonaktifkan Notifikasi";
-  }
-});
-}
-
-const storiesContainer = document.querySelector("#stories-list");
-
-let data;
-try {
-  data = await getData();
-  if (data.listStory && data.listStory.length > 0) {
-    await IdbHelper.clearStories();
-    for (const story of data.listStory) {
-      await IdbHelper.addStory(story);
+        if (subscribedNow) {
+          console.log("🔕 Menonaktifkan notifikasi...");
+          await PushHelper.unregisterPush(registration);
+          localStorage.removeItem("pushSubscribed");
+          btn.textContent = "Aktifkan Notifikasi";
+        } else {
+          console.log("🔔 Mengaktifkan notifikasi...");
+          await PushHelper.registerPush(registration);
+          localStorage.setItem("pushSubscribed", "true");
+          btn.textContent = "Nonaktifkan Notifikasi";
+        }
+      });
     }
-  }
-} catch (err) {
-  console.warn("Gagal ambil dari API, gunakan data lokal.");
-  const localStories = await IdbHelper.getAllStories();
-  data = { listStory: localStories };
-}
+
+    const storiesContainer = document.querySelector("#stories-list");
+
+    let data;
+    try {
+      data = await getData();
+      if (data.listStory && data.listStory.length > 0) {
+        await IdbHelper.clearStories();
+        for (const story of data.listStory) {
+          await IdbHelper.addStory(story);
+        }
+      }
+    } catch (err) {
+      console.warn("Gagal ambil dari API, gunakan data lokal.");
+      const localStories = await IdbHelper.getAllStories();
+      data = { listStory: localStories };
+    }
 
     if (!data.listStory || data.listStory.length === 0) {
       storiesContainer.innerHTML = `<p>Tidak ada data story atau kamu belum login.</p>`;
@@ -72,9 +71,7 @@ try {
     const baseLayers = {
       OpenStreetMap: L.tileLayer(
         "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-        {
-          attribution: "&copy; OpenStreetMap contributors",
-        },
+        { attribution: "&copy; OpenStreetMap contributors" },
       ),
       "Esri Satellite": L.tileLayer(
         "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
@@ -90,13 +87,20 @@ try {
 
     L.control.layers(baseLayers).addTo(map);
 
+    const markerIcon = L.icon({
+      iconUrl: `${import.meta.env.BASE_URL}images/icons/home.png`,
+      iconSize: [40, 40],
+      iconAnchor: [20, 40],
+      popupAnchor: [0, -35],
+    });
+
     const markers = [];
 
     data.listStory.forEach((story) => {
       const { name, description, photoUrl, lat, lon } = story;
 
       if (lat && lon) {
-        const marker = L.marker([lat, lon]).addTo(map);
+        const marker = L.marker([lat, lon], { icon: markerIcon }).addTo(map);
         marker.bindPopup(`
           <b>${name}</b><br>${description}<br>
           <img src="${photoUrl}" width="100" />
@@ -124,14 +128,10 @@ try {
       if (lat && lon) {
         storyCard.addEventListener("click", () => {
           map.setView([lat, lon], 10, { animate: true });
-          const targetMarker = markers.find(
-            (m) => m.lat === lat && m.lon === lon,
-          );
+          const targetMarker = markers.find((m) => m.lat === lat && m.lon === lon);
           if (targetMarker) targetMarker.marker.openPopup();
 
-          document
-            .querySelectorAll(".story-card")
-            .forEach((c) => c.classList.remove("active"));
+          document.querySelectorAll(".story-card").forEach((c) => c.classList.remove("active"));
           storyCard.classList.add("active");
         });
       }
@@ -139,18 +139,17 @@ try {
       const favBtn = storyCard.querySelector(".favorite-btn");
       const favText = storyCard.querySelector(".fav-text");
 
-      ( async () => {
+      (async () => {
         try {
           const isFav = await BookmarkIdb.isBookmarked(story.id);
-          if (isFav) favText.textContent = "Favorit";
-          else favText.textContent = "Bookmark";
+          favText.textContent = isFav ? "Favorit" : "Bookmark";
         } catch (err) {
           console.error("Error mengecek bookmark:", err);
         }
       })();
 
       favBtn.addEventListener("click", async (e) => {
-        e.stopPropagation(); 
+        e.stopPropagation();
         try {
           const isFavNow = await BookmarkIdb.isBookmarked(story.id);
           if (isFavNow) {
@@ -168,10 +167,9 @@ try {
         }
       });
 
-
       storiesContainer.appendChild(storyCard);
     });
-    
+
     const searchInput = document.getElementById("search-input");
 
     searchInput.addEventListener("input", (e) => {

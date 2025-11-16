@@ -13,7 +13,9 @@ window.addEventListener('online', async () => {
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", async () => {
     try {
-      const registration = await navigator.serviceWorker.register("/sw.js");
+      const registration = await navigator.serviceWorker.register(
+        `${import.meta.env.BASE_URL}sw.js`
+      );
       console.log("✅ Service Worker registered:", registration.scope);
 
       await PushHelper.registerPush(registration);
